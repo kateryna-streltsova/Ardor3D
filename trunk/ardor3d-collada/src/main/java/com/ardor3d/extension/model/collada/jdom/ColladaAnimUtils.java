@@ -181,7 +181,7 @@ public class ColladaAnimUtils {
      *            our <skin> element.
      */
     @SuppressWarnings("unchecked")
-    private void buildSkinMeshes(final Node ardorParentNode, final Element instanceController,
+    protected void buildSkinMeshes(final Node ardorParentNode, final Element instanceController,
             final Element controller, final Element skin) {
         final String skinSource = skin.getAttributeValue("source");
 
