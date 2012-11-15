@@ -39,11 +39,11 @@ import com.ardor3d.util.geom.VertMap;
 public class ColladaMeshUtils {
     private static final Logger logger = Logger.getLogger(ColladaMeshUtils.class.getName());
 
-    private final DataCache _dataCache;
-    private final ColladaDOMUtil _colladaDOMUtil;
-    private final ColladaMaterialUtils _colladaMaterialUtils;
-    private final boolean _optimizeMeshes;
-    private final EnumSet<MatchCondition> _optimizeSettings;
+    protected final DataCache _dataCache;
+    protected final ColladaDOMUtil _colladaDOMUtil;
+    protected final ColladaMaterialUtils _colladaMaterialUtils;
+    protected final boolean _optimizeMeshes;
+    protected final EnumSet<MatchCondition> _optimizeSettings;
 
     public ColladaMeshUtils(final DataCache dataCache, final ColladaDOMUtil colladaDOMUtil,
             final ColladaMaterialUtils colladaMaterialUtils, final boolean optimizeMeshes,
@@ -168,7 +168,7 @@ public class ColladaMeshUtils {
         return null;
     }
 
-    private Point buildPoints(final Element colladaGeometry, final Element mesh) {
+    protected Point buildPoints(final Element colladaGeometry, final Element mesh) {
         if (mesh == null || mesh.getChild("vertices") == null || mesh.getChild("vertices").getChild("input") == null) {
             return null;
         }
@@ -525,7 +525,7 @@ public class ColladaMeshUtils {
      * @return the max offset of our pipes.
      */
     @SuppressWarnings("unchecked")
-    private int extractPipes(final Element inputsParent, final LinkedList<ColladaInputPipe> pipesStore) {
+    protected int extractPipes(final Element inputsParent, final LinkedList<ColladaInputPipe> pipesStore) {
         int maxOffset = 0;
         int texCount = 0;
         for (final Element input : (List<Element>) inputsParent.getChildren("input")) {
@@ -566,7 +566,7 @@ public class ColladaMeshUtils {
      * @return the vertex index referenced in the given indices based on the pipes. Integer.MIN_VALUE is returned if no
      *         vertex pipe is found.
      */
-    private int processPipes(final LinkedList<ColladaInputPipe> pipes, final int[] currentVal) {
+    protected int processPipes(final LinkedList<ColladaInputPipe> pipes, final int[] currentVal) {
         // go through our pipes. use the indices in currentVal to pull the correct float val
         // from our source and set into our buffer.
         int rVal = Integer.MIN_VALUE;
@@ -586,7 +586,7 @@ public class ColladaMeshUtils {
      * @param element
      * @return value from 'name' or 'material' attribute
      */
-    private String extractName(final Element colladaGeometry, final Element element) {
+    protected String extractName(final Element colladaGeometry, final Element element) {
         // Try to get mesh name
         String name = element.getAttributeValue("name");
         if (name == null || name.isEmpty()) {

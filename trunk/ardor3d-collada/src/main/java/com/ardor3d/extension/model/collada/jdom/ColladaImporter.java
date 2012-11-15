@@ -59,17 +59,17 @@ import com.google.common.collect.Multimap;
  * </p>
  */
 public class ColladaImporter {
-    private boolean _loadTextures = true;
-    private boolean _flipTransparency = false;
-    private boolean _loadAnimations = true;
-    private ResourceLocator _textureLocator;
-    private ResourceLocator _modelLocator;
-    private boolean _compressTextures = false;
-    private boolean _optimizeMeshes = false;
-    private final EnumSet<MatchCondition> _optimizeSettings = EnumSet.of(MatchCondition.UVs, MatchCondition.Normal,
+    protected boolean _loadTextures = true;
+    protected boolean _flipTransparency = false;
+    protected boolean _loadAnimations = true;
+    protected ResourceLocator _textureLocator;
+    protected ResourceLocator _modelLocator;
+    protected boolean _compressTextures = false;
+    protected boolean _optimizeMeshes = false;
+    protected final EnumSet<MatchCondition> _optimizeSettings = EnumSet.of(MatchCondition.UVs, MatchCondition.Normal,
             MatchCondition.Color);
-    private Map<String, Joint> _externalJointMapping;
-    private final List<ColladaExtraPlugin> _extraPlugins = Lists.newArrayList();
+    protected Map<String, Joint> _externalJointMapping;
+    protected final List<ColladaExtraPlugin> _extraPlugins = Lists.newArrayList();
 
     public boolean isLoadTextures() {
         return _loadTextures;
@@ -282,7 +282,7 @@ public class ColladaImporter {
      *            the ResourceSource to read the resource from
      * @return the Collada root element
      */
-    private Element readCollada(final ResourceSource resource, final DataCache dataCache) {
+    protected Element readCollada(final ResourceSource resource, final DataCache dataCache) {
         try {
             final SAXBuilder builder = new SAXBuilder() {
                 @Override

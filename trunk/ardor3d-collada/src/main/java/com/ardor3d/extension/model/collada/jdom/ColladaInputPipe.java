@@ -43,7 +43,7 @@ public class ColladaInputPipe {
         INV_BIND_MATRIX, INPUT, IN_TANGENT, OUT_TANGENT, OUTPUT, INTERPOLATION, UNKNOWN
     }
 
-    static class SourceData {
+    public static class SourceData {
         int count;
         int stride;
         int offset;
@@ -53,6 +53,26 @@ public class ColladaInputPipe {
         boolean[] boolArray;
         int[] intArray;
         String[] stringArray;
+
+        public int getOffset() {
+            return offset;
+        }
+
+        public int getStride() {
+            return stride;
+        }
+
+        public ParamType getParamType() {
+            return paramType;
+        }
+
+        public float[] getFloatArray() {
+            return floatArray;
+        }
+
+        public String[] getStringArray() {
+            return stringArray;
+        }
 
         @Override
         public String toString() {

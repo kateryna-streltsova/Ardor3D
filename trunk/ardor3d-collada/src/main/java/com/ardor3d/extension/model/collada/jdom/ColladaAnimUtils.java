@@ -72,12 +72,12 @@ import com.google.common.collect.Multimap;
  * Methods for parsing Collada data related to animation, skinning and morphing.
  */
 public class ColladaAnimUtils {
-    private static final Logger logger = Logger.getLogger(ColladaAnimUtils.class.getName());
+    protected static final Logger logger = Logger.getLogger(ColladaAnimUtils.class.getName());
 
-    private final ColladaStorage _colladaStorage;
-    private final DataCache _dataCache;
-    private final ColladaDOMUtil _colladaDOMUtil;
-    private final ColladaMeshUtils _colladaMeshUtils;
+    protected final ColladaStorage _colladaStorage;
+    protected final DataCache _dataCache;
+    protected final ColladaDOMUtil _colladaDOMUtil;
+    protected final ColladaMeshUtils _colladaMeshUtils;
 
     public ColladaAnimUtils(final ColladaStorage colladaStorage, final DataCache dataCache,
             final ColladaDOMUtil colladaDOMUtil, final ColladaMeshUtils colladaMeshUtils) {
@@ -97,7 +97,7 @@ public class ColladaAnimUtils {
      * @return name.
      * @see SkinData#SkinData(String)
      */
-    private String getSkinStoreName(final Element ic, final Element controller) {
+    protected String getSkinStoreName(final Element ic, final Element controller) {
         final String controllerName = controller.getAttributeValue("name", (String) null) != null ? controller
                 .getAttributeValue("name", (String) null) : controller.getAttributeValue("id", (String) null);
         final String instanceControllerName = ic.getAttributeValue("name", (String) null) != null ? ic
@@ -114,7 +114,7 @@ public class ColladaAnimUtils {
      * @param source
      * @param target
      */
-    private void copyRenderStates(final Spatial source, final Spatial target) {
+    protected void copyRenderStates(final Spatial source, final Spatial target) {
         final EnumMap<StateType, RenderState> states = source.getLocalRenderStates();
         for (final RenderState state : states.values()) {
             target.setRenderState(state);
@@ -130,7 +130,7 @@ public class ColladaAnimUtils {
      * @throws IOException
      *             if we have troubles during the clone.
      */
-    private MeshData copyMeshData(final MeshData meshData) throws IOException {
+    protected MeshData copyMeshData(final MeshData meshData) throws IOException {
         final ByteArrayOutputStream bos = new ByteArrayOutputStream();
         final BinaryExporter exporter = new BinaryExporter();
         exporter.save(meshData, bos);

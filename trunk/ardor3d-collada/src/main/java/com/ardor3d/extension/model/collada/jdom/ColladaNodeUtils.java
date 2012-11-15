@@ -37,13 +37,13 @@ import com.google.common.collect.Lists;
  * Methods for parsing Collada data related to scenes and node hierarchy.
  */
 public class ColladaNodeUtils {
-    private static final Logger logger = Logger.getLogger(ColladaNodeUtils.class.getName());
+    protected static final Logger logger = Logger.getLogger(ColladaNodeUtils.class.getName());
 
-    private final DataCache _dataCache;
-    private final ColladaDOMUtil _colladaDOMUtil;
-    private final ColladaMaterialUtils _colladaMaterialUtils;
-    private final ColladaMeshUtils _colladaMeshUtils;
-    private final ColladaAnimUtils _colladaAnimUtils;
+    protected final DataCache _dataCache;
+    protected final ColladaDOMUtil _colladaDOMUtil;
+    protected final ColladaMaterialUtils _colladaMaterialUtils;
+    protected final ColladaMeshUtils _colladaMeshUtils;
+    protected final ColladaAnimUtils _colladaAnimUtils;
 
     public ColladaNodeUtils(final DataCache dataCache, final ColladaDOMUtil colladaDOMUtil,
             final ColladaMaterialUtils colladaMaterialUtils, final ColladaMeshUtils colladaMeshUtils,
@@ -241,7 +241,7 @@ public class ColladaNodeUtils {
      * @return a new Ardor3D node, created from the given <node> element
      */
     @SuppressWarnings("unchecked")
-    private Node buildNode(final Element dNode, JointNode jointNode) {
+    protected Node buildNode(final Element dNode, JointNode jointNode) {
         NodeType nodeType = NodeType.NODE;
         if (dNode.getAttribute("type") != null) {
             nodeType = Enum.valueOf(NodeType.class, dNode.getAttributeValue("type"));
