@@ -474,4 +474,9 @@ public class AnimationManager {
     public LoggingMap<String, Double> getValuesStore() {
         return _valuesStore;
     }
+
+    public Map<AnimationClip, AnimationClipInstance> getAnimationClips() {
+        return _clipInstances;
+    }
+
 }
