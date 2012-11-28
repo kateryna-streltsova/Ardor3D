@@ -87,7 +87,7 @@ public class AnimationManager {
     /**
      * boolean threshold to allow stop state to be updated one last time...
      */
-    private boolean canSetStopState = false;
+    private boolean _canSetStopState = false;
 
     /**
      * Listeners for changes to this manager's AnimationUpdateState.
@@ -339,14 +339,14 @@ public class AnimationManager {
     public void update() {
 
         if (_currentAnimationState != AnimationUpdateState.Play) {
-            if (_currentAnimationState == AnimationUpdateState.Stop && !canSetStopState) {
-                canSetStopState = true;
+            if (_currentAnimationState == AnimationUpdateState.Stop && !_canSetStopState) {
+                _canSetStopState = true;
             } else {
                 return;
             }
 
         } else {
-            canSetStopState = false;
+            _canSetStopState = false;
         }
 
         // grab current global time
