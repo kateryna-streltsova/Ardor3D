@@ -212,9 +212,11 @@ public class AnimationManager {
                     }
                 }
             }
-        } else if (newAnimationState == AnimationUpdateState.Stop) {
+        } else {
             for (final AnimationClipInstance instance : _clipInstances.values()) {
-                instance.setActive(false);
+                if (instance.isActive()) {
+                    instance.setStartTime(currentTime);
+                }
             }
         }
 
@@ -333,9 +335,6 @@ public class AnimationManager {
      * Move associated layers forward to the current global time and then apply the associated animation data to any
      * SkeletonPoses set on the manager.
      */
-    /**
-     * 
-     */
     public void update() {
 
         if (_currentAnimationState != AnimationUpdateState.Play) {
@@ -344,11 +343,9 @@ public class AnimationManager {
             } else {
                 return;
             }
-
         } else {
             _canSetStopState = false;
         }
-
         // grab current global time
         final double globalTime = _globalTimer.getTimeInSeconds();
 
@@ -391,33 +388,6 @@ public class AnimationManager {
             }
         }
     }
-
-    // /**
-    // * @param globalTime
-    // * current global time in seconds
-    // * @return
-    // */
-    // protected void updateLayersForAnimationState(final double globalTime) {
-    // final Collection<AnimationClipInstance> clipInstances = _clipInstances.values();
-    // for (final AnimationClipInstance instance : clipInstances) {
-    // switch (_currentAnimationState) {
-    // case stop:
-    // instance.setActive(false);
-    //
-    // break;
-    // case pause:
-    // if (instance.isActive()) {
-    // final double startTime = globalTime - instance.getCurrentTime() / instance.getTimeScale();
-    // instance.setStartTime(startTime);
-    // }
-    // break;
-    // case play:
-    // instance.setActive(true);
-    // // do nothing
-    // break;
-    // }
-    // }
-    // }
 
     /**
      * Retrieve and track an instance of an animation clip to be used with this manager.
@@ -587,9 +557,4 @@ public class AnimationManager {
     public LoggingMap<String, Double> getValuesStore() {
         return _valuesStore;
     }
-
-    public Map<AnimationClip, AnimationClipInstance> getAnimationClips() {
-        return _clipInstances;
-    }
-
 }
