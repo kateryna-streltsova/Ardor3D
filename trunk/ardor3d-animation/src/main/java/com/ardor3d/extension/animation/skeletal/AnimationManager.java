@@ -85,10 +85,13 @@ public class AnimationManager {
     protected AnimationUpdateState _currentAnimationState = AnimationUpdateState.Play;
 
     /**
-     * boolean threshold to allow stop state to be updated one last time...
+     * boolean flag to allow stop state to be updated one last time.
      */
     protected boolean _canSetStopState = false;
 
+    /**
+     * boolean flag to reset Clips automatically once they are stopped.
+     */
     protected boolean _resetClipsOnStop = false;
 
     /**
@@ -587,9 +590,9 @@ public class AnimationManager {
     public LoggingMap<String, Double> getValuesStore() {
         return _valuesStore;
     }
-
-    public Map<AnimationClip, AnimationClipInstance> getAnimationClips() {
+	
+	public Map<AnimationClip, AnimationClipInstance> getAnimationClips() {
         return _clipInstances;
     }
-
+	
 }
