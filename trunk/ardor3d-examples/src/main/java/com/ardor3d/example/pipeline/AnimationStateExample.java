@@ -202,9 +202,21 @@ public class AnimationStateExample extends ExampleBase {
         });
         basePanel.add(stopButton);
 
+        final UICheckBox resetAnimCheck = new UICheckBox("Reset Animation On Stop");
+        resetAnimCheck
+                .setLayoutData(new AnchorLayoutData(Alignment.TOP_LEFT, stopButton, Alignment.BOTTOM_LEFT, 0, -5));
+        resetAnimCheck.setSelected(false);
+        resetAnimCheck.addActionListener(new ActionListener() {
+            public void actionPerformed(final ActionEvent event) {
+                manager.setResetClipsOnStop(resetAnimCheck.isSelected());
+
+            }
+        });
+        basePanel.add(resetAnimCheck);
+
         final UICheckBox gpuSkinningCheck = new UICheckBox("Use GPU skinning");
-        gpuSkinningCheck.setLayoutData(new AnchorLayoutData(Alignment.TOP_LEFT, stopButton, Alignment.BOTTOM_LEFT, 0,
-                -5));
+        gpuSkinningCheck.setLayoutData(new AnchorLayoutData(Alignment.TOP_LEFT, resetAnimCheck, Alignment.BOTTOM_LEFT,
+                0, -5));
         gpuSkinningCheck.setSelected(false);
         gpuSkinningCheck.addActionListener(new ActionListener() {
             public void actionPerformed(final ActionEvent event) {
