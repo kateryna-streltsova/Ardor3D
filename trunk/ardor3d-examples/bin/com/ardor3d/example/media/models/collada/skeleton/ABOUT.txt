@@ -1,1 +1,0 @@
-The skeleton model contained herein was donated to Ardor3D for use in its examples only.  You may not use this model in your own application, demo or product.
