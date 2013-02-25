@@ -14,6 +14,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.text.DecimalFormat;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -23,14 +24,24 @@ import com.ardor3d.image.ImageDataFormat;
 import com.ardor3d.util.screen.ScreenExportable;
 
 public class ScreenShotImageExporter implements ScreenExportable {
+
+    public enum ScreenShotFileNameSuffixType {
+        timeStamp, counter;
+    }
+
     private static final Logger logger = Logger.getLogger(ScreenShotImageExporter.class.getName());
 
     protected File _directory;
     protected String _prepend;
+    protected String _filename;
     protected String _fileFormat;
     protected boolean _useAlpha;
 
     protected File _lastFile;
+
+    protected ScreenShotFileNameSuffixType _suffixType;
+
+    protected int _screenshotCount = Integer.MIN_VALUE;
 
     /**
      * Make a new exporter with the default settings:
@@ -53,6 +64,31 @@ public class ScreenShotImageExporter implements ScreenExportable {
      *            the directory to save the screen shots in.
      * @param prepend
      *            a value to prepend onto the generated file name. This must be at least 3 characters long.
+     * @param suffixType
+     *            type of suffix for generated filenameif requests a counter based suffix or a timeStamp based one.
+     * @param format
+     *            the format to use for saving the image. ImageIO is used for this, so safe values are likely: "png",
+     *            "jpg", "gif" and "bmp"
+     * @param useAlpha
+     *            true for alpha values to be stored in image (as applicable, depending on the given format)
+     * 
+     */
+    public ScreenShotImageExporter(final File directory, final String prepend,
+            final ScreenShotFileNameSuffixType suffixType, final String format, final boolean useAlpha) {
+        _directory = directory;
+        _prepend = prepend;
+        _fileFormat = format;
+        _useAlpha = useAlpha;
+        _suffixType = suffixType;
+    }
+
+    /**
+     * Construct a new exporter.
+     * 
+     * @param directory
+     *            the directory to save the screen shots in.
+     * @param prepend
+     *            a value to prepend onto the generated file name. This must be at least 3 characters long.
      * @param format
      *            the format to use for saving the image. ImageIO is used for this, so safe values are likely: "png",
      *            "jpg", "gif" and "bmp"
@@ -61,10 +97,7 @@ public class ScreenShotImageExporter implements ScreenExportable {
      */
     public ScreenShotImageExporter(final File directory, final String prepend, final String format,
             final boolean useAlpha) {
-        _directory = directory;
-        _prepend = prepend;
-        _fileFormat = format;
-        _useAlpha = useAlpha;
+        this(directory, prepend, ScreenShotFileNameSuffixType.timeStamp, format, useAlpha);
     }
 
     public void export(final ByteBuffer data, final int width, final int height) {
@@ -91,19 +124,20 @@ public class ScreenShotImageExporter implements ScreenExportable {
             }
         }
 
-        try {
-            final File out = new File(_directory, _prepend + System.currentTimeMillis() + "." + _fileFormat);
-            logger.fine("Taking screenshot: " + out.getAbsolutePath());
+        final long suffix = (_suffixType == ScreenShotFileNameSuffixType.timeStamp) ? System.currentTimeMillis()
+                : _screenshotCount++;
 
+        final DecimalFormat nmFormat = new DecimalFormat("000");
+        try {
+            final File out = new File(_directory, _prepend + nmFormat.format(suffix) + "." + _fileFormat);
+            logger.fine("Taking screenshot: " + out.getAbsolutePath());
             // write out the screen shot image to a file.
             ImageIO.write(img, _fileFormat, out);
 
             // save our successful file to be accessed as desired.
             _lastFile = out;
         } catch (final IOException e) {
-            logger
-                    .logp(Level.WARNING, getClass().getName(), "export(ByteBuffer, int, int)", e.getLocalizedMessage(),
-                            e);
+            logger.logp(Level.WARNING, getClass().getName(), "export(ByteBuffer, int, int)", e.getLocalizedMessage(), e);
         }
     }
 
@@ -132,6 +166,22 @@ public class ScreenShotImageExporter implements ScreenExportable {
 
     public String getPrepend() {
         return _prepend;
+    }
+
+    public ScreenShotFileNameSuffixType getSuffixtype() {
+        return _suffixType;
+    }
+
+    public void setSuffixtype(final ScreenShotFileNameSuffixType suffixType) {
+        if (suffixType == ScreenShotFileNameSuffixType.counter && _suffixType != ScreenShotFileNameSuffixType.counter) {
+            resetScreenShotCount();
+        }
+        _suffixType = suffixType;
+
+    }
+
+    public void resetScreenShotCount() {
+        _screenshotCount = 0;
     }
 
     public void setPrepend(final String prepend) {
