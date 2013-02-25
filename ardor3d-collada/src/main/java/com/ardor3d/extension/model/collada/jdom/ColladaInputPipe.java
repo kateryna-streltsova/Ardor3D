@@ -162,7 +162,7 @@ public class ColladaInputPipe {
                 }
                 // String paramType = param.getAttributeValue("type");
             }
-            if (_paramCount > 1 && skippedParam == true) {
+            if (_paramCount > 1 && skippedParam) {
                 ColladaInputPipe.logger.warning("Parameter skipping not yet supported when parsing sources. "
                         + _source.getAttributeValue("id"));
             }
