@@ -316,7 +316,7 @@ public class AnimationStateExample extends ExampleBase {
             colladaImporter.setOptimizeMeshes(true);
 
             // Load the collada scene
-            final String mainFile = "collada/skeleton/skeleton.walk.dae";
+            final String mainFile = "collada/skeleton.walk.dae";
             final ColladaStorage storage = colladaImporter.load(mainFile);
             final Node colladaNode = storage.getScene();
             final List<SkinData> skinDatas = storage.getSkins();

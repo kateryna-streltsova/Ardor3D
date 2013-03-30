@@ -122,6 +122,7 @@ public class ColladaExample extends ExampleBase {
 
         // Create our options frame and fps label
         createHUD();
+
     }
 
     private void createHUD() {

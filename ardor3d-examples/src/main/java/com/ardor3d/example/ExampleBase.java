@@ -149,6 +149,7 @@ public abstract class ExampleBase implements Runnable, Updater, Scene {
             }
             // grab the graphics context so cleanup will work out.
             final CanvasRenderer cr = _canvas.getCanvasRenderer();
+
             cr.makeCurrentContext();
             quit(cr.getRenderer());
             cr.releaseCurrentContext();
@@ -368,6 +369,7 @@ public abstract class ExampleBase implements Runnable, Updater, Scene {
         } else if (prefs.getRenderer().startsWith("JOGL")) {
             final JoglCanvasRenderer canvasRenderer = new JoglCanvasRenderer(example);
             example._canvas = new JoglCanvas(canvasRenderer, settings);
+            example._canvas.getCanvasRenderer().getRenderer().setBackgroundColor(ColorRGBA.BLACK);
             final JoglCanvas canvas = (JoglCanvas) example._canvas;
             example._mouseManager = new AwtMouseManager(canvas);
             example._physicalLayer = new PhysicalLayer(new AwtKeyboardWrapper(canvas), new AwtMouseWrapper(canvas,
