@@ -16,8 +16,8 @@ import java.util.List;
 
 import com.ardor3d.math.MathUtils;
 import com.ardor3d.renderer.Camera;
-import com.ardor3d.renderer.ContextManager;
 import com.ardor3d.renderer.Camera.FrustumIntersect;
+import com.ardor3d.renderer.ContextManager;
 import com.ardor3d.scenegraph.MeshData;
 import com.ardor3d.scenegraph.controller.ComplexSpatialController;
 import com.ardor3d.util.export.InputCapsule;
@@ -39,6 +39,7 @@ public class ParticleController extends ComplexSpatialController<ParticleSystem>
     private double _precision;
     private boolean _controlFlow;
     private boolean _updateOnlyInView;
+    private boolean _spawnEnabled = true;
     private Camera _viewCamera;
 
     private int iterations;
@@ -191,22 +192,26 @@ public class ParticleController extends ComplexSpatialController<ParticleSystem>
 
                         // We plan to reuse the particle
                     } else {
-                        // Not all particles are dead (this one will be reused)
-                        dead = false;
+                        if (_spawnEnabled) {
+                            // Not all particles are dead (this one will be reused)
+                            dead = false;
 
-                        // If we are doing flow control, decrement
-                        // particlesToCreate, since we are about to create
-                        // one
-                        if (_controlFlow) {
-                            _particlesToCreate--;
+                            // If we are doing flow control, decrement
+                            // particlesToCreate, since we are about to create
+                            // one
+                            if (_controlFlow) {
+                                _particlesToCreate--;
+                            }
+
+                            // Recreate the particle
+                            p.recreateParticle(particles.getRandomLifeSpan());
+                            p.setStatus(Particle.Status.Alive);
+                            // in case of ramp time 0 entries.
+                            p.updateAndCheck(0);
+                            particles.initParticleLocation(i);
+                            particles.resetParticleVelocity(i);
+                            p.updateVerts(null);
                         }
-
-                        // Recreate the particle
-                        p.recreateParticle(particles.getRandomLifeSpan());
-                        p.setStatus(Particle.Status.Alive);
-                        particles.initParticleLocation(i);
-                        particles.resetParticleVelocity(i);
-                        p.updateVerts(null);
                     }
 
                 } else if (!reuse || (_controlFlow && particles.getReleaseRate() > 0)) {
@@ -513,5 +518,13 @@ public class ParticleController extends ComplexSpatialController<ParticleSystem>
         _updateOnlyInView = capsule.readBoolean("updateOnlyInView", false);
         iterations = capsule.readInt("iterations", 0);
         influences = capsule.readSavableList("influences", null);
+    }
+
+    public void resetFlowCount() {
+        _releaseParticles = 0;
+    }
+
+    public void setSpawnEnabled(final boolean spawnEnabled) {
+        _spawnEnabled = spawnEnabled;
     }
 }

@@ -12,10 +12,12 @@ package com.ardor3d.extension.model.collada.jdom;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.jdom.Element;
+import org.jdom2.Element;
 
+import com.ardor3d.extension.animation.skeletal.AttachmentPoint;
 import com.ardor3d.extension.animation.skeletal.Joint;
 import com.ardor3d.extension.animation.skeletal.Skeleton;
 import com.ardor3d.extension.model.collada.jdom.data.AssetData;
@@ -85,30 +87,28 @@ public class ColladaNodeUtils {
             // Load each sub node and attach
             final JointNode baseJointNode = new JointNode(null);
             _dataCache.setRootJointNode(baseJointNode);
-            for (final Element n : (List<Element>) visualScene.getChildren("node")) {
+            for (final Element n : visualScene.getChildren("node")) {
                 final Node subNode = buildNode(n, baseJointNode);
                 if (subNode != null) {
                     sceneRoot.attachChild(subNode);
                 }
             }
 
-            // build a list of joints - one list per skeleton
-            final List<List<Joint>> jointCollection = Lists.newArrayList();
+            // build a list of joints - one list per skeleton - and build a skeleton for each joint list.
             for (final JointNode jointChildNode : _dataCache.getRootJointNode().getChildren()) {
                 final List<Joint> jointList = Lists.newArrayList();
                 buildJointLists(jointChildNode, jointList);
-                jointCollection.add(jointList);
-            }
-
-            // build a skeleton for each joint list.
-            for (final List<Joint> jointList : jointCollection) {
                 final Joint[] joints = jointList.toArray(new Joint[jointList.size()]);
                 final Skeleton skeleton = new Skeleton(joints[0].getName() + "_skeleton", joints);
-                logger.fine(skeleton.getName());
+                if (logger.isLoggable(Level.FINE)) {
+                    logger.fine("skeleton created: " + skeleton.getName());
+                }
                 for (final Joint joint : jointList) {
                     _dataCache.getJointSkeletonMapping().put(joint, skeleton);
-                    logger.fine("- Joint " + joint.getName() + " - index: " + joint.getIndex() + " parent index: "
-                            + joint.getParentIndex());
+                    if (logger.isLoggable(Level.FINE)) {
+                        logger.fine("- Joint " + joint.getName() + " - index: " + joint.getIndex() + " parent index: "
+                                + joint.getParentIndex());
+                    }
                 }
                 _dataCache.addSkeleton(skeleton);
             }
@@ -163,7 +163,7 @@ public class ColladaNodeUtils {
     public AssetData parseAsset(final Element asset) {
         final AssetData assetData = new AssetData();
 
-        for (final Element child : (List<Element>) asset.getChildren()) {
+        for (final Element child : asset.getChildren()) {
             if ("contributor".equals(child.getName())) {
                 parseContributor(assetData, child);
             } else if ("created".equals(child.getName())) {
@@ -204,7 +204,7 @@ public class ColladaNodeUtils {
 
     @SuppressWarnings("unchecked")
     private void parseContributor(final AssetData assetData, final Element contributor) {
-        for (final Element child : (List<Element>) contributor.getChildren()) {
+        for (final Element child : contributor.getChildren()) {
             if ("author".equals(child.getName())) {
                 assetData.setAuthor(child.getText());
             } else if ("authoringTool".equals(child.getName())) {
@@ -241,11 +241,16 @@ public class ColladaNodeUtils {
      * @return a new Ardor3D node, created from the given <node> element
      */
     @SuppressWarnings("unchecked")
+<<<<<<< HEAD
     protected Node buildNode(final Element dNode, JointNode jointNode) {
         NodeType nodeType = NodeType.NODE;
         if (dNode.getAttribute("type") != null) {
             nodeType = Enum.valueOf(NodeType.class, dNode.getAttributeValue("type"));
         }
+=======
+    private Node buildNode(final Element dNode, JointNode jointNode) {
+        final NodeType nodeType = getNodeType(dNode);
+>>>>>>> a07094afd2e67e416eb585e69035271308f383fa
         final JointNode jointChildNode;
         if (nodeType == NodeType.JOINT) {
             String name = dNode.getAttributeValue("name");
@@ -273,7 +278,7 @@ public class ColladaNodeUtils {
         final Node node = new Node(nodeName);
 
         final List<Element> transforms = new ArrayList<Element>();
-        for (final Element child : (List<Element>) dNode.getChildren()) {
+        for (final Element child : dNode.getChildren()) {
             if (_dataCache.getTransformTypes().contains(child.getName())) {
                 transforms.add(child);
             }
@@ -290,7 +295,7 @@ public class ColladaNodeUtils {
         }
 
         // process any instance geometries
-        for (final Element instance_geometry : (List<Element>) dNode.getChildren("instance_geometry")) {
+        for (final Element instance_geometry : dNode.getChildren("instance_geometry")) {
             _colladaMaterialUtils.bindMaterials(instance_geometry.getChild("bind_material"));
 
             final Spatial mesh = _colladaMeshUtils.getGeometryMesh(instance_geometry);
@@ -302,23 +307,32 @@ public class ColladaNodeUtils {
         }
 
         // process any instance controllers
-        for (final Element instanceController : (List<Element>) dNode.getChildren("instance_controller")) {
+        for (final Element instanceController : dNode.getChildren("instance_controller")) {
             _dataCache.getControllers().add(new ControllerStore(node, instanceController));
         }
 
         // process any instance nodes
-        for (final Element in : (List<Element>) dNode.getChildren("instance_node")) {
+        for (final Element in : dNode.getChildren("instance_node")) {
             final Node subNode = getNode(in, jointNode);
             if (subNode != null) {
                 node.attachChild(subNode);
+                if (nodeType == NodeType.JOINT
+                        && getNodeType(_colladaDOMUtil.findTargetWithId(in.getAttributeValue("url"))) == NodeType.NODE) {
+                    // make attachment
+                    createJointAttachment(jointChildNode, node, subNode);
+                }
             }
         }
 
         // process any concrete child nodes.
-        for (final Element n : (List<Element>) dNode.getChildren("node")) {
+        for (final Element n : dNode.getChildren("node")) {
             final Node subNode = buildNode(n, jointNode);
             if (subNode != null) {
                 node.attachChild(subNode);
+                if (nodeType == NodeType.JOINT && getNodeType(n) == NodeType.NODE) {
+                    // make attachment
+                    createJointAttachment(jointChildNode, node, subNode);
+                }
             }
         }
 
@@ -326,6 +340,22 @@ public class ColladaNodeUtils {
         _dataCache.getElementSpatialMapping().put(dNode, node);
 
         return node;
+    }
+
+    protected void createJointAttachment(final JointNode jointChildNode, final Node node, final Node subNode) {
+        final AttachmentPoint attach = new AttachmentPoint("attach-" + node.getName(), (short) 0, subNode,
+                new Transform(subNode.getTransform()));
+        _dataCache.addAttachmentPoint(jointChildNode.getJoint(), attach);
+        // we will attach to scene instead.
+        subNode.removeFromParent();
+    }
+
+    private NodeType getNodeType(final Element dNode) {
+        if (dNode.getAttribute("type") != null) {
+            return Enum.valueOf(NodeType.class, dNode.getAttributeValue("type"));
+        } else {
+            return NodeType.NODE;
+        }
     }
 
     /**
@@ -374,5 +404,11 @@ public class ColladaNodeUtils {
             }
         }
         return new Transform().fromHomogeneousMatrix(finalMat);
+    }
+
+    public void reattachAttachments(final Node scene) {
+        for (final AttachmentPoint point : _dataCache.getAttachmentPoints().values()) {
+            scene.attachChild(point.getAttachment());
+        }
     }
 }

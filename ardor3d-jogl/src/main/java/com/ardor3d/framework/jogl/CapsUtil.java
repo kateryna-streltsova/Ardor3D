@@ -19,6 +19,11 @@ import com.ardor3d.util.Ardor3dException;
 public class CapsUtil {
 
     public static GLCapabilities getCapsForSettings(final DisplaySettings settings) {
+        return getCapsForSettings(settings, true, false, false, false);
+    }
+
+    public static GLCapabilities getCapsForSettings(final DisplaySettings settings, final boolean onscreen,
+            final boolean bitmapRequested, final boolean pbufferRequested, final boolean fboRequested) {
 
         // Validate window dimensions.
         if (settings.getWidth() <= 0 || settings.getHeight() <= 0) {
@@ -31,7 +36,7 @@ public class CapsUtil {
             throw new Ardor3dException("Invalid pixel depth: " + settings.getColorDepth());
         }
 
-        final GLCapabilities caps = new GLCapabilities(GLProfile.getMaxFixedFunc(true));
+        final GLCapabilities caps = new GLCapabilities(GLProfile.getMaximum(true));
         caps.setHardwareAccelerated(true);
         caps.setDoubleBuffered(true);
         caps.setAlphaBits(settings.getAlphaBits());
@@ -52,6 +57,12 @@ public class CapsUtil {
                 caps.setBlueBits(4);
                 caps.setGreenBits(4);
                 break;
+        }
+        caps.setOnscreen(onscreen);
+        if (!onscreen) {
+            caps.setBitmap(bitmapRequested);
+            caps.setPBuffer(pbufferRequested);
+            caps.setFBO(fboRequested);
         }
         return caps;
     }

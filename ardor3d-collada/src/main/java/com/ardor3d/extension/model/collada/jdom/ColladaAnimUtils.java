@@ -25,10 +25,11 @@ import java.util.StringTokenizer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.jdom.Attribute;
-import org.jdom.DataConversionException;
-import org.jdom.Element;
+import org.jdom2.Attribute;
+import org.jdom2.DataConversionException;
+import org.jdom2.Element;
 
+import com.ardor3d.extension.animation.skeletal.AttachmentPoint;
 import com.ardor3d.extension.animation.skeletal.Joint;
 import com.ardor3d.extension.animation.skeletal.Skeleton;
 import com.ardor3d.extension.animation.skeletal.SkeletonPose;
@@ -197,7 +198,7 @@ public class ColladaAnimUtils {
         if (meshNode != null) {
             // Look for skeleton entries in the original <instance_controller> element
             final List<Element> skeletonRoots = Lists.newArrayList();
-            for (final Element sk : (List<Element>) instanceController.getChildren("skeleton")) {
+            for (final Element sk : instanceController.getChildren("skeleton")) {
                 final Element skroot = _colladaDOMUtil.findTargetWithId(sk.getText());
                 if (skroot != null) {
                     // add as a possible root for when we need to locate a joint by name later.
@@ -219,7 +220,7 @@ public class ColladaAnimUtils {
             final List<Transform> bindMatrices = Lists.newArrayList();
             final List<ColladaInputPipe.ParamType> paramTypes = Lists.newArrayList();
 
-            for (final Element inputEL : (List<Element>) jointsEL.getChildren("input")) {
+            for (final Element inputEL : jointsEL.getChildren("input")) {
                 final ColladaInputPipe pipe = new ColladaInputPipe(_colladaDOMUtil, inputEL);
                 final ColladaInputPipe.SourceData sd = pipe.getSourceData();
                 if (pipe.getType() == ColladaInputPipe.Type.JOINT) {
@@ -310,6 +311,9 @@ public class ColladaAnimUtils {
                 skPose = new SkeletonPose(ourSkeleton);
                 _dataCache.getSkeletonPoseMapping().put(ourSkeleton, skPose);
 
+                // attach any attachment points found for the skeleton's joints
+                addAttachments(skPose);
+
                 // Skeleton's default to bind position, so update the global transforms.
                 skPose.updateTransforms();
             }
@@ -326,7 +330,7 @@ public class ColladaAnimUtils {
             int indOff = 0, weightOff = 0;
 
             int maxOffset = 0;
-            for (final Element inputEL : (List<Element>) weightsEL.getChildren("input")) {
+            for (final Element inputEL : weightsEL.getChildren("input")) {
                 final ColladaInputPipe pipe = new ColladaInputPipe(_colladaDOMUtil, inputEL);
                 final ColladaInputPipe.SourceData sd = pipe.getSourceData();
                 if (pipe.getOffset() > maxOffset) {
@@ -560,6 +564,18 @@ public class ColladaAnimUtils {
         }
     }
 
+    private void addAttachments(final SkeletonPose skPose) {
+        final Skeleton skeleton = skPose.getSkeleton();
+        for (final Joint joint : skeleton.getJoints()) {
+            if (_dataCache.getAttachmentPoints().containsKey(joint)) {
+                for (final AttachmentPoint point : _dataCache.getAttachmentPoints().get(joint)) {
+                    point.setJointIndex(joint.getIndex());
+                    skPose.addPoseListener(point);
+                }
+            }
+        }
+    }
+
     /**
      * Construct morph mesh(es) from the <morph> element and attach them (under a single new Node) to the given parent
      * Node.
@@ -634,7 +650,7 @@ public class ColladaAnimUtils {
     private void buildAnimations(final Element parentElement, final Collection<TargetChannel> targetList) {
 
         final List<Element> elementTransforms = new ArrayList<Element>();
-        for (final Element child : (List<Element>) parentElement.getChildren()) {
+        for (final Element child : parentElement.getChildren()) {
             if (_dataCache.getTransformTypes().contains(child.getName())) {
                 elementTransforms.add(child);
             }
@@ -659,7 +675,7 @@ public class ColladaAnimUtils {
             final EnumMap<Type, ColladaInputPipe> pipes = Maps.newEnumMap(Type.class);
 
             final Element samplerElement = _colladaDOMUtil.findTargetWithId(source);
-            for (final Element inputElement : (List<Element>) samplerElement.getChildren("input")) {
+            for (final Element inputElement : samplerElement.getChildren("input")) {
                 final ColladaInputPipe pipe = new ColladaInputPipe(_colladaDOMUtil, inputElement);
                 pipes.put(pipe.getType(), pipe);
             }
@@ -833,7 +849,7 @@ public class ColladaAnimUtils {
             final AnimationItem animationItem = new AnimationItem(name);
             animationItemRoot.getChildren().add(animationItem);
 
-            for (final Element animationElement : (List<Element>) animationRoot.getChildren("animation")) {
+            for (final Element animationElement : animationRoot.getChildren("animation")) {
                 parseAnimations(channelMap, animationElement, animationItem);
             }
         }

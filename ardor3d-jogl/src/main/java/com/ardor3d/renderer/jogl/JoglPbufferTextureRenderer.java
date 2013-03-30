@@ -54,6 +54,7 @@ public class JoglPbufferTextureRenderer extends AbstractPbufferTextureRenderer {
     private static final Logger logger = Logger.getLogger(JoglPbufferTextureRenderer.class.getName());
 
     /* Pbuffer instance */
+    // TODO use javax.media.opengl.GLOffscreenAutoDrawable
     private GLPbuffer _pbuffer;
 
     private GLContext _context;
@@ -261,8 +262,9 @@ public class JoglPbufferTextureRenderer extends AbstractPbufferTextureRenderer {
             }
 
             // Make our GLPbuffer...
-            final GLDrawableFactory fac = GLDrawableFactory.getFactory(GLProfile.getMaxFixedFunc(true));
-            final GLCapabilities caps = new GLCapabilities(GLProfile.getMaxFixedFunc(true));
+            final GLProfile profile = GLProfile.getMaximum(true);
+            final GLDrawableFactory fac = GLDrawableFactory.getFactory(profile);
+            final GLCapabilities caps = new GLCapabilities(profile);
             caps.setHardwareAccelerated(true);
             caps.setDoubleBuffered(true);
             caps.setAlphaBits(_settings.getAlphaBits());
@@ -278,7 +280,7 @@ public class JoglPbufferTextureRenderer extends AbstractPbufferTextureRenderer {
 
             final JoglContextCapabilities contextCaps = new JoglContextCapabilities(_pbuffer.getGL());
             ContextManager.addContext(_context,
-                    new RenderContext(_context, contextCaps, ContextManager.getCurrentContext()));
+                    new JoglRenderContext(_context, contextCaps, ContextManager.getCurrentContext()));
 
         } catch (final Exception e) {
             logger.logp(Level.SEVERE, this.getClass().toString(), "initPbuffer()", "Exception", e);
