@@ -6,9 +6,6 @@
 			<attribute name="maven.pomderived" value="true"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="lib/jdom/jaxen.jar"/>
-	<classpathentry kind="lib" path="lib/jdom/jdom.jar"/>
-	<classpathentry kind="lib" path="lib/jdom/saxpath.jar"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/ardor3d-core"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/ardor3d-animation"/>
 	<classpathentry kind="src" output="target/test-classes" path="src/test/java">

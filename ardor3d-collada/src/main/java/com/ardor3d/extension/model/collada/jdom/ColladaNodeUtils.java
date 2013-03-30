@@ -241,16 +241,8 @@ public class ColladaNodeUtils {
      * @return a new Ardor3D node, created from the given <node> element
      */
     @SuppressWarnings("unchecked")
-<<<<<<< HEAD
     protected Node buildNode(final Element dNode, JointNode jointNode) {
-        NodeType nodeType = NodeType.NODE;
-        if (dNode.getAttribute("type") != null) {
-            nodeType = Enum.valueOf(NodeType.class, dNode.getAttributeValue("type"));
-        }
-=======
-    private Node buildNode(final Element dNode, JointNode jointNode) {
         final NodeType nodeType = getNodeType(dNode);
->>>>>>> a07094afd2e67e416eb585e69035271308f383fa
         final JointNode jointChildNode;
         if (nodeType == NodeType.JOINT) {
             String name = dNode.getAttributeValue("name");
