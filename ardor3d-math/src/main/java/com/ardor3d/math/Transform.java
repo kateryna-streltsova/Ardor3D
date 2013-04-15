@@ -148,6 +148,15 @@ public class Transform implements Cloneable, Savable, Externalizable, ReadOnlyTr
         return _rotationMatrix;
     }
 
+    public boolean makeRotationMatrix() {
+        final boolean completed = _matrix.othornormalise();
+        if (completed) {
+            _rotationMatrix = _matrix.isOrthonormal();
+            return _rotationMatrix;
+        }
+        return false;
+    }
+
     /**
      * @return true if scale is used and scale is guaranteed to be uniform.
      */

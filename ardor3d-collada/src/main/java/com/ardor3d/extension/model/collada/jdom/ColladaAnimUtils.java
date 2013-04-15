@@ -85,6 +85,7 @@ public class ColladaAnimUtils {
         _dataCache = dataCache;
         _colladaDOMUtil = colladaDOMUtil;
         _colladaMeshUtils = colladaMeshUtils;
+
     }
 
     /**
@@ -299,7 +300,6 @@ public class ColladaAnimUtils {
                     return;
                 }
                 joint.setInverseBindPose(bindMatrices.get(i));
-
                 ourSkeleton = _dataCache.getJointSkeletonMapping().get(joint);
                 order[i] = joint.getIndex();
             }

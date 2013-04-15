@@ -66,6 +66,8 @@ public class ColladaImporter {
     protected ResourceLocator _modelLocator;
     protected boolean _compressTextures = false;
     protected boolean _optimizeMeshes = false;
+    protected boolean _orthornomalizeMatrices = false;
+
     protected final EnumSet<MatchCondition> _optimizeSettings = EnumSet.of(MatchCondition.UVs, MatchCondition.Normal,
             MatchCondition.Color);
     protected Map<String, Joint> _externalJointMapping;
@@ -153,6 +155,21 @@ public class ColladaImporter {
 
     public void setOptimizeMeshes(final boolean optimizeMeshes) {
         _optimizeMeshes = optimizeMeshes;
+    }
+
+    /**
+     * @return the orthornomalizeMatrices
+     */
+    public boolean isOrthornomalizeMatrices() {
+        return _orthornomalizeMatrices;
+    }
+
+    /**
+     * @param orthornomalizeMatrices
+     *            the orthornomalizeMatrices to set
+     */
+    public void setOrthornomalizeMatrices(final boolean orthornomalizeMatrices) {
+        _orthornomalizeMatrices = orthornomalizeMatrices;
     }
 
     public Set<MatchCondition> getOptimizeSettings() {
