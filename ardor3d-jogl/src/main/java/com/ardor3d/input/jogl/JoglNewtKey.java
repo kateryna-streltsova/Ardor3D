@@ -70,8 +70,8 @@ public enum JoglNewtKey {
     INSERT(KeyEvent.VK_INSERT, Key.INSERT), //
     J(KeyEvent.VK_J, Key.J), //
     K(KeyEvent.VK_K, Key.K), //
-    KANA(KeyEvent.VK_KANA, Key.KANA), //
-    KANJI(KeyEvent.VK_KANJI, Key.KANJI), //
+    // KANA(KeyEvent.VK_KANA, Key.KANA), //
+    // KANJI(KeyEvent.VK_KANJI, Key.KANJI), //
     L(KeyEvent.VK_L, Key.L), //
     OPEN_BRACKET(KeyEvent.VK_OPEN_BRACKET, Key.LBRACKET), //
     CONTROL(KeyEvent.VK_CONTROL, Key.LCONTROL), //
@@ -134,10 +134,6 @@ public enum JoglNewtKey {
         _key = key;
     }
 
-    private JoglNewtKey(final int newtCode, final Key key) {
-        this((short) newtCode, key);
-    }
-
     public static Key findByCode(final short newtCode) {
         for (final JoglNewtKey ak : values()) {
             if (ak._newtCode == newtCode) {
@@ -146,10 +142,6 @@ public enum JoglNewtKey {
         }
 
         return Key.UNKNOWN;
-    }
-
-    public static Key findByCode(final int newtCode) {
-        return findByCode((short) newtCode);
     }
 
     public int getNewtCode() {

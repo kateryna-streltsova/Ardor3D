@@ -14,17 +14,18 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
 import java.nio.DoubleBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.nio.LongBuffer;
 import java.nio.ShortBuffer;
 
-import javax.media.opengl.GLProfile;
-
+import com.ardor3d.framework.jogl.CapsUtil;
 import com.ardor3d.image.Image;
 import com.ardor3d.image.PixelDataType;
 import com.ardor3d.image.util.ImageLoader;
+import com.ardor3d.image.util.ImageLoaderUtil;
 import com.ardor3d.scene.state.jogl.util.JoglTextureUtil;
 import com.ardor3d.util.geom.BufferUtils;
 import com.jogamp.common.nio.Buffers;
@@ -33,96 +34,202 @@ import com.jogamp.opengl.util.texture.TextureIO;
 
 public class JoglImageLoader implements ImageLoader {
 
-    // private static final Logger logger = Logger.getLogger(JoglImageLoader.class.getName());
-
     private static boolean createOnHeap = false;
 
-    private static final String[] supportedFormats = new String[] { TextureIO.DDS, TextureIO.GIF, TextureIO.JPG,
-            TextureIO.JPG, TextureIO.PAM, TextureIO.PNG, TextureIO.PNG, TextureIO.PPM, TextureIO.SGI, TextureIO.TGA,
-            TextureIO.TIFF };
+    private enum TYPE {
+        BYTE(ByteBuffer.class), SHORT(ShortBuffer.class), CHAR(CharBuffer.class), INT(IntBuffer.class), FLOAT(
+                FloatBuffer.class), LONG(LongBuffer.class), DOUBLE(DoubleBuffer.class);
+
+        private final Class<? extends Buffer> bufferClass;
+
+        private TYPE(final Class<? extends Buffer> bufferClass) {
+            this.bufferClass = bufferClass;
+        }
+    };
+
+    private static final String[] supportedFormats = new String[] { "." + TextureIO.DDS.toUpperCase(),
+            "." + TextureIO.GIF.toUpperCase(), "." + TextureIO.JPG.toUpperCase(), "." + TextureIO.PAM.toUpperCase(),
+            "." + TextureIO.PNG.toUpperCase(), "." + TextureIO.PPM.toUpperCase(), "." + TextureIO.SGI.toUpperCase(),
+            "." + TextureIO.TGA.toUpperCase(), "." + TextureIO.TIFF.toUpperCase() };
 
     public static String[] getSupportedFormats() {
         return supportedFormats;
     }
 
-    public static void registerLoader() {}
+    public static void registerLoader() {
+        ImageLoaderUtil.registerHandler(new JoglImageLoader(), supportedFormats);
+    }
 
     public JoglImageLoader() {}
 
     @Override
     public Image load(final InputStream is, final boolean flipped) throws IOException {
-        final TextureData textureData = TextureIO.newTextureData(GLProfile.getMaximum(true), is, true, null);
+        final TextureData textureData = TextureIO.newTextureData(CapsUtil.getProfile(), is, true, null);
         final Buffer textureDataBuffer = textureData.getBuffer();
         final Image ardorImage = new Image();
+        final TYPE bufferDataType = getBufferDataType(textureDataBuffer);
+        if (bufferDataType == null) {
+            throw new UnsupportedOperationException("Unknown buffer type " + textureDataBuffer.getClass().getName());
+        } else {
+            final int dataSizeInBytes = textureDataBuffer.capacity() * Buffers.sizeOfBufferElem(textureDataBuffer);
+            final ByteBuffer scratch = createOnHeap ? BufferUtils.createByteBufferOnHeap(dataSizeInBytes) : Buffers
+                    .newDirectByteBuffer(dataSizeInBytes);
+            if (flipped) {
+                flipImageData(textureDataBuffer, scratch, dataSizeInBytes, bufferDataType, textureData.getWidth(),
+                        textureData.getHeight());
+            } else {
+                copyImageData(textureDataBuffer, scratch, bufferDataType);
+            }
+            ardorImage.setWidth(textureData.getWidth());
+            ardorImage.setHeight(textureData.getHeight());
+            ardorImage.setData(scratch);
+            ardorImage.setDataFormat(JoglTextureUtil.getImageDataFormat(textureData.getPixelFormat()));
+            // ardorImage.setDataType(JoglTextureUtil.getPixelDataType(textureData.getPixelType()));
+            ardorImage.setDataType(PixelDataType.UnsignedByte);
+            return ardorImage;
+        }
+    }
 
-        int dataSize = textureDataBuffer.capacity();
-        if (textureDataBuffer instanceof ShortBuffer) {
-            dataSize *= Buffers.SIZEOF_SHORT;
-        } else {
-            if (textureDataBuffer instanceof IntBuffer) {
-                dataSize *= Buffers.SIZEOF_INT;
-            } else {
-                if (textureDataBuffer instanceof LongBuffer) {
-                    dataSize *= Buffers.SIZEOF_LONG;
-                } else {
-                    if (textureDataBuffer instanceof FloatBuffer) {
-                        dataSize *= Buffers.SIZEOF_FLOAT;
-                    } else {
-                        if (textureDataBuffer instanceof DoubleBuffer) {
-                            dataSize *= Buffers.SIZEOF_DOUBLE;
-                        }
-                    }
-                }
+    private TYPE getBufferDataType(final Buffer buffer) {
+        TYPE bufferDataType = null;
+        for (final TYPE type : TYPE.values()) {
+            if (type.bufferClass.isAssignableFrom(buffer.getClass())) {
+                bufferDataType = type;
+                break;
             }
         }
-        final ByteBuffer scratch = createOnHeap ? BufferUtils.createByteBufferOnHeap(dataSize) : Buffers
-                .newDirectByteBuffer(dataSize);
-        if (textureDataBuffer instanceof ShortBuffer) {
-            final ShortBuffer shortTextureDataBuffer = (ShortBuffer) textureDataBuffer;
-            while (textureDataBuffer.hasRemaining()) {
-                scratch.putShort(shortTextureDataBuffer.get());
-            }
-        } else {
-            if (textureDataBuffer instanceof IntBuffer) {
-                final IntBuffer intTextureDataBuffer = (IntBuffer) textureDataBuffer;
-                while (textureDataBuffer.hasRemaining()) {
-                    scratch.putInt(intTextureDataBuffer.get());
-                }
-            } else {
-                if (textureDataBuffer instanceof LongBuffer) {
-                    final LongBuffer longTextureDataBuffer = (LongBuffer) textureDataBuffer;
-                    while (textureDataBuffer.hasRemaining()) {
-                        scratch.putLong(longTextureDataBuffer.get());
-                    }
-                } else {
-                    if (textureDataBuffer instanceof FloatBuffer) {
-                        final FloatBuffer floatTextureDataBuffer = (FloatBuffer) textureDataBuffer;
-                        while (textureDataBuffer.hasRemaining()) {
-                            scratch.putFloat(floatTextureDataBuffer.get());
-                        }
-                    } else {
-                        if (textureDataBuffer instanceof DoubleBuffer) {
-                            final DoubleBuffer doubleTextureDataBuffer = (DoubleBuffer) textureDataBuffer;
-                            while (textureDataBuffer.hasRemaining()) {
-                                scratch.putDouble(doubleTextureDataBuffer.get());
-                            }
-                        } else {
-                            if (textureDataBuffer instanceof ByteBuffer) {
-                                scratch.put((ByteBuffer) textureDataBuffer);
-                            }
-                        }
-                    }
-                }
+        return bufferDataType;
+    }
+
+    protected void copyImageData(final Buffer src, final ByteBuffer dest, final TYPE bufferDataType) {
+        final int srcPos = src.position();
+        final int destPos = dest.position();
+        switch (bufferDataType) {
+            case BYTE:
+                dest.put((ByteBuffer) src);
+                break;
+            case SHORT:
+                dest.asShortBuffer().put((ShortBuffer) src);
+                break;
+            case CHAR:
+                dest.asCharBuffer().put((CharBuffer) src);
+                break;
+            case INT:
+                dest.asIntBuffer().put((IntBuffer) src);
+                break;
+            case FLOAT:
+                dest.asFloatBuffer().put((FloatBuffer) src);
+            case LONG:
+                dest.asLongBuffer().put((LongBuffer) src);
+                break;
+            case DOUBLE:
+                dest.asDoubleBuffer().put((DoubleBuffer) src);
+                break;
+            default:
+                // it should never happen
+        }
+        src.position(srcPos);
+        dest.position(destPos);
+    }
+
+    protected void flipImageData(final Buffer src, final ByteBuffer dest, final int dataSizeInBytes,
+            final TYPE bufferDataType, final int width, final int height) {
+        final int srcPos = src.position();
+        final int destPos = dest.position();
+        final int bytesPerPixel = dataSizeInBytes / (width * height);
+        final int bytesPerElement = Buffers.sizeOfBufferElem(src);
+        final int elementsPerPixel = bytesPerPixel / bytesPerElement;
+        final int elementsPerLine = width * elementsPerPixel;
+        final int bytesPerLine = bytesPerPixel * width;// width = pixels per line
+        byte[] byteBuf = null;
+        short[] shortBuf = null;
+        char[] charBuf = null;
+        int[] intBuf = null;
+        float[] floatBuf = null;
+        long[] longBuf = null;
+        double[] doubleBuf = null;
+        switch (bufferDataType) {
+            case BYTE:
+                byteBuf = new byte[elementsPerLine];
+                break;
+            case SHORT:
+                shortBuf = new short[elementsPerLine];
+                break;
+            case CHAR:
+                charBuf = new char[elementsPerLine];
+                break;
+            case INT:
+                intBuf = new int[elementsPerLine];
+                break;
+            case FLOAT:
+                floatBuf = new float[elementsPerLine];
+                break;
+            case LONG:
+                longBuf = new long[elementsPerLine];
+                break;
+            case DOUBLE:
+                doubleBuf = new double[elementsPerLine];
+                break;
+            default:
+                // it should never happen
+        }
+        while (dest.hasRemaining()) {
+            final int srcFirstPixelIndex = dest.position() / bytesPerPixel;
+            final int srcFirstPixelComponentOffset = dest.position() - (srcFirstPixelIndex * bytesPerPixel);
+            final int srcFirstColumnIndex = srcFirstPixelIndex % width;
+            final int scrFirstRowIndex = (srcFirstPixelIndex - srcFirstColumnIndex) / height;
+            final int dstFirstColumnIndex = srcFirstColumnIndex;
+            final int dstFirstRowIndex = (height - 1) - scrFirstRowIndex;
+            final int dstFirstPixelIndex = dstFirstRowIndex * width + dstFirstColumnIndex;
+            final int dstFirstPixelComponentOffset = srcFirstPixelComponentOffset;
+            final int dstFirstElementIndex = dstFirstPixelIndex * bytesPerPixel + dstFirstPixelComponentOffset;
+            switch (bufferDataType) {
+                case BYTE:
+                    ((ByteBuffer) src).position(dstFirstElementIndex);
+                    ((ByteBuffer) src).get(byteBuf);
+                    dest.put(byteBuf);
+                    break;
+                case SHORT:
+                    ((ShortBuffer) src).position(dstFirstElementIndex);
+                    ((ShortBuffer) src).get(shortBuf);
+                    dest.asShortBuffer().put(shortBuf);
+                    dest.position(dest.position() + bytesPerLine);
+                    break;
+                case CHAR:
+                    ((CharBuffer) src).position(dstFirstElementIndex);
+                    ((CharBuffer) src).get(charBuf);
+                    dest.asCharBuffer().put(charBuf);
+                    dest.position(dest.position() + bytesPerLine);
+                    break;
+                case INT:
+                    ((IntBuffer) src).position(dstFirstElementIndex);
+                    ((IntBuffer) src).get(intBuf);
+                    dest.asIntBuffer().put(intBuf);
+                    dest.position(dest.position() + bytesPerLine);
+                    break;
+                case FLOAT:
+                    ((FloatBuffer) src).position(dstFirstElementIndex);
+                    ((FloatBuffer) src).get(floatBuf);
+                    dest.asFloatBuffer().put(floatBuf);
+                    dest.position(dest.position() + bytesPerLine);
+                    break;
+                case LONG:
+                    ((LongBuffer) src).position(dstFirstElementIndex);
+                    ((LongBuffer) src).get(longBuf);
+                    dest.asLongBuffer().put(longBuf);
+                    dest.position(dest.position() + bytesPerLine);
+                    break;
+                case DOUBLE:
+                    ((DoubleBuffer) src).position(dstFirstElementIndex);
+                    ((DoubleBuffer) src).get(doubleBuf);
+                    dest.asDoubleBuffer().put(doubleBuf);
+                    dest.position(dest.position() + bytesPerLine);
+                    break;
+                default:
+                    // it should never happen
             }
         }
-        scratch.rewind();
-        textureDataBuffer.rewind();
-        ardorImage.setWidth(textureData.getWidth());
-        ardorImage.setHeight(textureData.getHeight());
-        ardorImage.setData(scratch);
-        ardorImage.setDataFormat(JoglTextureUtil.getImageDataFormat(textureData.getPixelFormat()));
-        // ardorImage.setDataType(JoglTextureUtil.getPixelDataType(textureData.getPixelType()));
-        ardorImage.setDataType(PixelDataType.UnsignedByte);
-        return ardorImage;
+        src.position(srcPos);
+        dest.position(destPos);
     }
 }
