@@ -149,6 +149,20 @@ public class Transform implements Cloneable, Savable, Externalizable, ReadOnlyTr
     }
 
     /**
+     * Force the matrix to be orthornormal using Gram-Schmidt process.
+     * 
+     * @return true if process is successful, false otherwise.
+     */
+    public boolean makeRotationMatrix() {
+        final boolean completed = _matrix.othornormalise();
+        if (completed) {
+            _rotationMatrix = _matrix.isOrthonormal();
+            return _rotationMatrix;
+        }
+        return false;
+    }
+
+    /**
      * @return true if scale is used and scale is guaranteed to be uniform.
      */
     @Override

@@ -104,7 +104,7 @@ public class ColladaExample extends ExampleBase {
         _lightState.attach(light);
 
         // Load collada model
-        loadColladaModel(ResourceLocatorTool.locateResource(ResourceLocatorTool.TYPE_MODEL, "collada/sony/Seymour.dae"));
+        loadColladaModel(ResourceLocatorTool.locateResource(ResourceLocatorTool.TYPE_MODEL, "collada/grabriella4.dae"));
 
         final File rootDir = new File(".");
         daeFiles = findFiles(rootDir, ".dae", null);

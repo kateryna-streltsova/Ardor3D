@@ -1700,6 +1700,118 @@ public class Matrix3 implements Cloneable, Savable, Externalizable, ReadOnlyMatr
     }
 
     /**
+     * It attempts an iterative Gram-schmidt to make this matrix orthornormal, as referred in Fletcher Dunn & Ian
+     * Parberry 3D Math Primer for Graphics and Game Development 2nd Edition, ISBN: 978-1-56881-723-1 pages 175-176, or
+     * http://gamemath.com/powerpoint/6%20More%20on%20Matrices.pptx slides 58-59. If this method fails to achieve
+     * orthormalisation it will return false, however end result might differ greatly from the expected result.
+     * 
+     * 
+     * @return
+     */
+    public boolean othornormalise() {
+        // suggested value in Dunn's 3D math primer for Graphics and Game Development 2nd Edition
+        return othornormalise(0.003);
+    }
+
+    /**
+     * @param k
+     * @return
+     */
+    protected boolean othornormalise(final double k) {
+
+        // split matrix into row vectors and normalize them
+        final Vector3[] m = new Vector3[] { new Vector3(_m00, _m01, _m02).normalizeLocal(),
+                new Vector3(_m10, _m11, _m12).normalizeLocal(), new Vector3(_m20, _m21, _m22).normalizeLocal() };
+
+        final Vector3[] mtmp = new Vector3[] { new Vector3(), new Vector3(), new Vector3(), new Vector3() };
+        // suggested number of iterations in the Dunn's book could be less or could be more (but i wonder if it is
+        // more
+        // how different will the value be?)
+        for (int count = 0; count < 50; count++) {
+
+            for (int i = 0; i < m.length; i++) {
+
+                final Vector3 divSub = Vector3.fetchTempInstance().set(Vector3.ZERO);
+
+                for (int j = m.length - 1; j >= 0; j--) {
+                    if (i != j) {
+                        final double dotsquare = m[j].dot(m[j]);
+                        final double idot = m[i].dot(m[j]);
+                        final double dotdiv = dotsquare == 0 ? 0 : k * (idot / dotsquare);
+                        final Vector3 jdivResult = Vector3.fetchTempInstance().set(m[j].multiply(dotdiv, null));
+                        jdivResult.subtract(divSub, divSub);
+                        Vector3.releaseTempInstance(jdivResult);
+                    }
+                }
+                // subract the first component now
+                m[i].subtract(divSub, mtmp[i]);
+                Vector3.releaseTempInstance(divSub);
+            }
+            final int x = 0;
+            // put mtmps in m for next iteration
+            for (int i = 0; i < m.length; i++) {
+                m[i].set(mtmp[i]);
+            }
+
+        }
+
+        final Matrix3 orthogonalMatrix = applyGramSchmidt(m, null);
+
+        if (orthogonalMatrix.isOrthonormal()) {
+            this.set(orthogonalMatrix);
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Method which applies Gram-schmidt to a row based array of vectors.
+     * 
+     * @param vectors
+     *            an array of vectors with length 3, which correspond to the row vectors of a 4x4 matrix (Matrix4)
+     * @param store
+     *            an output matrix;
+     * @return a Matrix which has been grammSchmidted.
+     */
+    private Matrix3 applyGramSchmidt(final Vector3[] vectors, final Matrix3 store) {
+        if (vectors.length != 3) {
+            throw new IllegalArgumentException(
+                    "Expected an row array of representation length 3 as parameter, array has " + vectors.length
+                            + " elements.");
+
+        }
+        Matrix3 result = store;
+        if (result == null) {
+            result = new Matrix3();
+        }
+        // need a copy of the result vectors
+        final Vector3[] resultVect = new Vector3[vectors.length];
+        System.arraycopy(vectors, 0, resultVect, 0, vectors.length);
+
+        for (int i = 1; i < vectors.length; i++) {
+            final Vector3 divSub = Vector3.fetchTempInstance().set(Vector3.ZERO);
+            for (int j = i - 1; j >= 0; j--) {
+                if (i != j) {
+                    final double dotsquare = resultVect[j].dot(resultVect[j]);
+                    final double idot = vectors[i].dot(resultVect[j]);
+                    final double dotdiv = dotsquare == 0 ? 0 : idot / dotsquare;
+                    final Vector3 jdivResult = Vector3.fetchTempInstance().set(resultVect[j].multiply(dotdiv, null));
+                    jdivResult.subtract(divSub, divSub);
+                    Vector3.releaseTempInstance(jdivResult);
+                }
+            }
+            // subract the first component now
+            vectors[i].subtract(divSub, resultVect[i]);
+            Vector3.releaseTempInstance(divSub);
+            result.setRow(i, resultVect[i]);
+        }
+
+        result.setRow(0, resultVect[0]);
+
+        return result;
+    }
+
+    /**
      * @return the string representation of this matrix.
      */
     @Override
